@@ -1,3 +1,4 @@
+# Unregister endpoint (DELETE)
 """
 High School Management System API
 
@@ -105,3 +106,17 @@ def signup_for_activity(activity_name: str, email: str):
     # Add student
     activity["participants"].append(email)
     return {"message": f"Signed up {email} for {activity_name}"}
+
+
+@app.delete("/activities/{activity_name}/unregister")
+def unregister_from_activity(activity_name: str, email: str):
+    """Remove a student from an activity"""
+    if activity_name not in activities:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    activity = activities[activity_name]
+    # Remove all matching emails (case-insensitive)
+    original_count = len(activity["participants"])
+    activity["participants"] = [p for p in activity["participants"] if p.lower() != email.lower()]
+    if len(activity["participants"]) < original_count:
+        return {"message": f"Removed {email} from {activity_name}"}
+    raise HTTPException(status_code=404, detail="Participant not found in this activity")

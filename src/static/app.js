@@ -46,7 +46,34 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           details.participants.forEach((p) => {
             const li = document.createElement("li");
-            li.textContent = p;
+            // Email text
+            const emailSpan = document.createElement("span");
+            emailSpan.textContent = p;
+            li.appendChild(emailSpan);
+
+            // Delete icon
+            const deleteIcon = document.createElement("span");
+            deleteIcon.className = "delete-icon";
+            deleteIcon.title = "Remove participant";
+            deleteIcon.innerHTML = "&#128465;"; // Trash can emoji
+            deleteIcon.addEventListener("click", async () => {
+              if (confirm(`Remove ${p} from ${name}?`)) {
+                try {
+                  const response = await fetch(`/activities/${encodeURIComponent(name)}/unregister?email=${encodeURIComponent(p)}`, {
+                    method: "DELETE"
+                  });
+                  if (response.ok) {
+                    fetchActivities();
+                  } else {
+                    const result = await response.json();
+                    alert(result.detail || "Failed to remove participant.");
+                  }
+                } catch (err) {
+                  alert("Failed to remove participant.");
+                }
+              }
+            });
+            li.appendChild(deleteIcon);
             participantsList.appendChild(li);
           });
         }
@@ -84,6 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        fetchActivities(); // Refresh activities list
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
